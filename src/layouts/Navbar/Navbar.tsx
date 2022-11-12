@@ -121,7 +121,13 @@ const Navbar = () => {
           width: toggle ? "74px" : "220px",
         }}
       >
-        <NavLogo toggle={toggle}></NavLogo>
+        <NavLogo
+          toggle={toggle}
+          onClick={() => {
+            setNoti(false);
+            setSearch(false);
+          }}
+        ></NavLogo>
         <div className="nav-container">
           <NavLinkItem
             title="Home"

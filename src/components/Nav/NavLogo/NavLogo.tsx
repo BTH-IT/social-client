@@ -1,9 +1,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const NavLogo = ({ toggle }: { toggle: boolean }) => {
+const NavLogo = ({
+  toggle,
+  onClick,
+}: {
+  toggle: boolean;
+  onClick: () => void;
+}) => {
   return (
-    <Link to="/" className="nav-logo-container">
+    <Link to="/" className="nav-logo-container" onClick={onClick}>
       <i
         className="bi bi-instagram nav-logo-icon"
         style={
