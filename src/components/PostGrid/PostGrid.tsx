@@ -1,5 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
+import postApi from "../../api/postApi";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { authActions } from "../../redux/features/auth/authSlice";
+import { PostType } from "../Posts/Post";
 
 const StyledPostGrid = styled.div`
   display: grid;
@@ -13,7 +18,8 @@ const StyledPostGrid = styled.div`
       height: 293px;
       transition: all 0.2s ease;
 
-      img {
+      img,
+      video {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -35,38 +41,61 @@ const StyledPostGrid = styled.div`
 `;
 
 const PostGrid = () => {
+  const { pathname } = useLocation();
+  const userId = pathname.split("/")[1];
+  const methodApi = pathname.split("/")[2];
+
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
+  const [postList, setPostList] = useState<PostType[]>([]);
+  useEffect(() => {
+    async function fetchPosts() {
+      try {
+        if (userId === "explore") {
+          const res = await postApi.getAllPost();
+          setPostList(res.data);
+        } else if (!methodApi) {
+          const res = await postApi.getYourTimeline(userId);
+          setPostList(res.data);
+        } else if (methodApi === "saved") {
+          const res = await postApi.getSavedPost(userId);
+          setPostList(res.data);
+        } else {
+          setPostList([]);
+        }
+      } catch (error: any) {
+        if (error.response.status === 401) {
+          navigate("/login");
+          dispatch(authActions.logout());
+        }
+      }
+    }
+    fetchPosts();
+  }, [currentUser?._id, dispatch, methodApi, navigate, pathname, userId]);
+
   return (
     <StyledPostGrid>
-      <div className="profile-grid_item">
-        <img
-          src="https://images.unsplash.com/photo-1668069574922-bca50880fd70?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80"
-          alt=""
-        />
-      </div>
-      <div className="profile-grid_item">
-        <img
-          src="https://images.unsplash.com/photo-1668069574922-bca50880fd70?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80"
-          alt=""
-        />
-      </div>
-      <div className="profile-grid_item">
-        <img
-          src="https://images.unsplash.com/photo-1668069574922-bca50880fd70?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80"
-          alt=""
-        />
-      </div>
-      <div className="profile-grid_item">
-        <img
-          src="https://images.unsplash.com/photo-1668069574922-bca50880fd70?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80"
-          alt=""
-        />
-      </div>
-      <div className="profile-grid_item">
-        <img
-          src="https://images.unsplash.com/photo-1668069574922-bca50880fd70?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80"
-          alt=""
-        />
-      </div>
+      {postList.length > 0 &&
+        postList.map((post) => (
+          <Link
+            to={`/p/${post._id}`}
+            className="profile-grid_item"
+            key={post._id}
+          >
+            {post.fileUploads[0].type === "image" ? (
+              <img
+                src={`https://bth-social-server.netlify.app/files/${post.fileUploads[0].filename}`}
+                alt=""
+              />
+            ) : (
+              <video
+                src={`https://bth-social-server.netlify.app/files/${post.fileUploads[0].filename}`}
+                controls
+              ></video>
+            )}
+          </Link>
+        ))}
     </StyledPostGrid>
   );
 };

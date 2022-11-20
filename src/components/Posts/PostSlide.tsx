@@ -3,13 +3,15 @@ import { Navigation, Pagination } from "swiper";
 import "swiper/scss";
 import "swiper/scss/navigation";
 import "swiper/scss/pagination";
+import { FileNameType } from "../Create/Create";
 
 interface PostSlideProps {
   width: string;
   height: string;
+  fileUploads: FileNameType[];
 }
 
-const PostSlide = ({ width, height }: PostSlideProps) => {
+const PostSlide = ({ width, height, fileUploads }: PostSlideProps) => {
   return (
     <Swiper
       modules={[Navigation, Pagination]}
@@ -23,34 +25,33 @@ const PostSlide = ({ width, height }: PostSlideProps) => {
         height,
       }}
     >
-      <SwiperSlide
-        style={{
-          width,
-          height,
-        }}
-      >
-        <div className="post-image">
-          <img
-            src="https://images.unsplash.com/photo-1661347333298-26846cec680b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80"
-            alt=""
-            className="post-img"
-          />
-        </div>
-      </SwiperSlide>
-      <SwiperSlide
-        style={{
-          width,
-          height,
-        }}
-      >
-        <div className="post-image">
-          <img
-            src="https://images.unsplash.com/photo-1667053508464-eb11b394df83?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=465&q=80"
-            alt=""
-            className="post-img"
-          />
-        </div>
-      </SwiperSlide>
+      {fileUploads &&
+        fileUploads.length > 0 &&
+        fileUploads.map((file) => (
+          <SwiperSlide
+            style={{
+              width,
+              height,
+            }}
+            key={"bth" + file.filename + "3103"}
+          >
+            <div className="post-image">
+              {file.type === "image" ? (
+                <img
+                  src={`https://bth-social-server.netlify.app/files/${file.filename}`}
+                  alt=""
+                  className="post-img"
+                />
+              ) : (
+                <video
+                  src={`https://bth-social-server.netlify.app/files/${file.filename}`}
+                  className="post-img"
+                  controls
+                ></video>
+              )}
+            </div>
+          </SwiperSlide>
+        ))}
     </Swiper>
   );
 };

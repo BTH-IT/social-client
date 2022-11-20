@@ -1,13 +1,22 @@
-import React, { useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import styled from "styled-components";
+import deleteFile from "../../api/deleteFile";
+import uploadFile from "../../api/uploadFile";
+import userApi from "../../api/userApi";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import Button from "../../components/Button/Button";
 import Input from "../../components/Input/Input";
 import Modal from "../../components/Modal/Modal";
+import { UserType } from "../../components/Posts/Post";
+import { authActions } from "../../redux/features/auth/authSlice";
 import { StyledChangePhoto } from "../Profile/ProfilePage";
 
 const StyledEditAccount = styled.div`
   max-width: 935px;
   width: 100%;
+  height: 100vh;
   margin: 0 auto 30px;
   padding: 30px 20px 0 20px;
   background-color: #fafafa;
@@ -23,6 +32,7 @@ const StyledEditAccount = styled.div`
       border: 1px solid rgb(219, 219, 219);
       display: flex;
       flex-direction: column;
+      justify-content: space-around;
       align-items: center;
       gap: 30px;
       padding: 0px 20px 30px 20px;
@@ -55,11 +65,8 @@ const StyledEditAccount = styled.div`
 
     &-name,
     &-username,
-    &-password,
     &-bio,
-    &-email,
-    &-phone,
-    &-gender {
+    &-email {
       width: 100%;
       max-width: 500px;
       font-size: 2rem;
@@ -96,41 +103,137 @@ const StyledEditAccount = styled.div`
         border-color: black;
       }
     }
-
-    &-select {
-      width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      outline: none;
-      font-size: 1.6rem;
-      border: 1px solid rgb(219, 219, 219);
-    }
   }
 `;
 
 const EditAccount = () => {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
   const [showModalPhoto, setShowModalPhoto] = useState<boolean>(false);
+  const loginSuccess = useAppSelector((state) => state.auth.isLoggedIn);
+
+  useEffect(() => {
+    if (!loginSuccess) {
+      navigate("/login", { replace: true });
+    }
+  }, [loginSuccess, navigate]);
+
+  if (!loginSuccess) {
+    navigate("/login");
+    return null;
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    const formArray = Array.from((e.target as HTMLFormElement).elements);
+    const email =
+      currentUser?.email !== (formArray[3] as HTMLInputElement).value &&
+      (formArray[3] as HTMLInputElement).value
+        ? (formArray[3] as HTMLInputElement).value
+        : currentUser?.email;
+
+    const username =
+      currentUser?.username !== (formArray[1] as HTMLInputElement).value &&
+      (formArray[1] as HTMLInputElement).value
+        ? (formArray[1] as HTMLInputElement).value
+        : currentUser?.username;
+
+    const fullname =
+      currentUser?.fullname !== (formArray[0] as HTMLInputElement).value &&
+      (formArray[0] as HTMLInputElement).value
+        ? (formArray[0] as HTMLInputElement).value
+        : currentUser?.fullname;
+
+    const desc =
+      currentUser?.desc !== (formArray[2] as HTMLTextAreaElement).value
+        ? (formArray[2] as HTMLTextAreaElement).value
+        : currentUser.desc;
+
+    const newUpdateUser: UserType = {
+      ...currentUser,
+      email,
+      username,
+      fullname,
+      desc,
+    };
+
+    try {
+      if (currentUser?._id) {
+        await userApi.update(currentUser?._id, newUpdateUser);
+        localStorage.setItem("current_user", JSON.stringify(newUpdateUser));
+        window.location.reload();
+        toast.success("Update successfully");
+      }
+    } catch (error: any) {
+      if (error.response.status === 401) {
+        navigate("/login");
+        dispatch(authActions.logout());
+      } else if (error.response.status === 403) {
+        toast.warning("Nothing change at all");
+      } else toast.error("Update failure");
+    }
+  };
+
+  const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (!currentUser) return;
+    const file = (e.target.files as FileList)[0];
+    const data = new FormData();
+    const filename = Date.now() + file.name;
+    data.append("name", filename);
+    data.append("file", file);
+
+    const newUpdateUser: UserType = {
+      ...currentUser,
+      profilePicture: filename,
+    };
+
+    try {
+      if (currentUser?._id) {
+        await userApi.update(currentUser?._id, newUpdateUser);
+        await uploadFile(data);
+        localStorage.setItem("current_user", JSON.stringify(newUpdateUser));
+        window.location.reload();
+        toast.success("Update successfully");
+      }
+    } catch (error: any) {
+      if (error.response.status === 401) {
+        navigate("/login");
+        dispatch(authActions.logout());
+      } else if (error.response.status === 403) {
+        toast.warning("Nothing change at all");
+      } else toast.error("Update failure");
+    }
+  };
 
   return (
     <>
       <StyledEditAccount>
-        <form className="edit-form">
+        <form className="edit-form" onSubmit={handleSubmit}>
           <div className="edit-avatar">
             <div className="edit-image" onClick={() => setShowModalPhoto(true)}>
               <img
-                src="https://images.unsplash.com/photo-1668056114373-6798f930420b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=397&q=80"
+                src={
+                  currentUser?.profilePicture
+                    ? `https://bth-social-server.netlify.app/files/${currentUser?.profilePicture}`
+                    : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
+                }
                 alt=""
                 className="edit-img"
               />
             </div>
-            <div className="edit-avatar_name">bienthanhhung</div>
+            <div className="edit-avatar_name">{currentUser?.username}</div>
           </div>
           <div className="edit-name">
-            <label htmlFor="name" className="edit-label">
-              Name
+            <label htmlFor="fullname" className="edit-label">
+              Fullname
             </label>
-            <Input id="name" placeholder="Name" className="edit-input"></Input>
+            <Input
+              id="fullname"
+              placeholder={`${currentUser?.fullname}`}
+              className="edit-input"
+            ></Input>
           </div>
           <div className="edit-username">
             <label htmlFor="username" className="edit-label">
@@ -138,19 +241,8 @@ const EditAccount = () => {
             </label>
             <Input
               id="username"
-              placeholder="username"
+              placeholder={`${currentUser?.username}`}
               className="edit-input"
-            ></Input>
-          </div>
-          <div className="edit-password">
-            <label htmlFor="password" className="edit-label">
-              Password
-            </label>
-            <Input
-              id="password"
-              placeholder="password"
-              className="edit-input"
-              type="password"
             ></Input>
           </div>
           <div className="edit-bio">
@@ -162,6 +254,7 @@ const EditAccount = () => {
               id="bio"
               className="edit-textarea"
               placeholder="Typing your bio..."
+              defaultValue={currentUser?.desc}
             ></textarea>
           </div>
           <div className="edit-email">
@@ -170,33 +263,10 @@ const EditAccount = () => {
             </label>
             <Input
               id="email"
-              placeholder="Email"
+              placeholder={`${currentUser?.email}`}
               className="edit-input"
               type="email"
             ></Input>
-          </div>
-          <div className="edit-phone">
-            <label htmlFor="phone" className="edit-label">
-              Phone number
-            </label>
-            <Input
-              id="phone"
-              placeholder="phone"
-              className="edit-input"
-            ></Input>
-          </div>
-          <div className="edit-gender">
-            <label htmlFor="gender" className="edit-label">
-              Gender
-            </label>
-            <select name="gender" id="gender" className="edit-select">
-              <option value="" defaultValue="" hidden>
-                Gender
-              </option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
           </div>
           <Button primary>Submit</Button>
         </form>
@@ -208,8 +278,41 @@ const EditAccount = () => {
       >
         <StyledChangePhoto>
           <h2>Change Profile Photo</h2>
-          <div>Upload Photo</div>
-          <div>Remove Current Photo</div>
+          <label className="blue" htmlFor="upload-photo">
+            Upload Photo
+          </label>
+          <input type="file" hidden id="upload-photo" onChange={handleUpload} />
+          <div
+            className="red"
+            onClick={async () => {
+              if (!currentUser?.profilePicture) return;
+
+              const newUpdateUser: UserType = {
+                ...currentUser,
+                profilePicture: "",
+              };
+
+              try {
+                await deleteFile(currentUser?.profilePicture);
+                await userApi.update(currentUser._id, newUpdateUser);
+                localStorage.setItem(
+                  "current_user",
+                  JSON.stringify(newUpdateUser)
+                );
+                window.location.reload();
+                toast.success("Update successfully");
+              } catch (error: any) {
+                if (error.response.status === 401) {
+                  navigate("/login");
+                  dispatch(authActions.logout());
+                } else if (error.response.status === 403) {
+                  toast.warning("Nothing change at all");
+                } else toast.error("Update failure");
+              }
+            }}
+          >
+            Remove Current Photo
+          </div>
           <div onClick={() => setShowModalPhoto(false)}>Cancel</div>
         </StyledChangePhoto>
       </Modal>

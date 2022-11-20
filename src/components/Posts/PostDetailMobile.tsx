@@ -1,44 +1,16 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
+import userApi from "../../api/userApi";
+import { useAppDispatch } from "../../app/hooks";
+import { authActions } from "../../redux/features/auth/authSlice";
 import Comment from "../Comment/Comment";
+import { PostType, UserType } from "./Post";
 import PostComment from "./PostComment";
+import { CommentType } from "./PostDetail";
 import PostHeading from "./PostHeading";
 import PostInfo from "./PostInfo";
 import PostSlide from "./PostSlide";
-import styled from "styled-components";
-import userApi from "../../api/userApi";
-import { Link, useNavigate } from "react-router-dom";
-import { authActions } from "../../redux/features/auth/authSlice";
-import { useAppDispatch } from "../../app/hooks";
-import { FileNameType } from "../Create/Create";
-
-export interface PostType {
-  _id: string;
-  userId: string;
-  desc: string;
-  saved: string[];
-  likes: string[];
-  comments: [];
-  fileUploads: FileNameType[];
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-}
-
-export interface UserType {
-  _id: string;
-  username: string;
-  fullname: string;
-  email: string;
-  profilePicture: string;
-  desc: string;
-  posts: string[];
-  followers: string[];
-  followings: string[];
-  saved: string[];
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-}
 
 const StyledPost = styled.div`
   background-color: white;
@@ -78,7 +50,7 @@ const StyledPost = styled.div`
   }
 `;
 
-const Post = ({ post }: { post: PostType }) => {
+const PostDetailMobile = ({ post }: { post: PostType }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [user, setUser] = useState<UserType | null>(null);
@@ -125,11 +97,15 @@ const Post = ({ post }: { post: PostType }) => {
             <div className="post-desc">
               <h6>{user?.username}</h6> {post.desc}
             </div>
-            {post.comments && post.comments.length > 0 && (
-              <Link to={`/p/${post._id}`} className="post-show-comment">
-                View all {post.comments?.length} comments
-              </Link>
-            )}
+            {post.comments &&
+              post.comments.length > 0 &&
+              post.comments.map((comment: CommentType) => (
+                <Comment
+                  comment={comment}
+                  key={comment.id}
+                  postId={post._id}
+                ></Comment>
+              ))}
           </div>
         </PostInfo>
 
@@ -139,4 +115,4 @@ const Post = ({ post }: { post: PostType }) => {
   );
 };
 
-export default Post;
+export default PostDetailMobile;

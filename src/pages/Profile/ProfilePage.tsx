@@ -1,8 +1,15 @@
-import React, { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { ChangeEvent, useEffect, useState } from "react";
+import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import styled from "styled-components";
+import postApi from "../../api/postApi";
+import uploadFile from "../../api/uploadFile";
+import userApi from "../../api/userApi";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import Button from "../../components/Button/Button";
 import Modal from "../../components/Modal/Modal";
+import { PostType, UserType } from "../../components/Posts/Post";
+import { authActions } from "../../redux/features/auth/authSlice";
 
 const StyledProfilePage = styled.div`
   max-width: 935px;
@@ -173,25 +180,129 @@ export const StyledChangePhoto = styled.div`
     font-size: 2rem;
   }
 
-  div {
+  div,
+  label {
     padding: 20px 0;
     border-bottom: 1px solid rgb(219, 219, 219);
     font-size: 1.8rem;
     text-align: center;
     cursor: pointer;
     opacity: 0.8;
+    display: block;
   }
 
   div:last-child {
     border: none;
   }
+
+  .blue {
+    color: #1d4ed8;
+  }
+
+  .red {
+    color: #b91c1c;
+  }
 `;
 
+const Following = ({ onClick }: { onClick: () => void }) => {
+  const { userId } = useParams();
+  const currentUser: UserType | null = JSON.parse(
+    localStorage.getItem("current_user") || ""
+  );
+
+  const handleFollow = async () => {
+    try {
+      if (userId && currentUser) {
+        await userApi.followUser(userId, currentUser._id);
+
+        currentUser.followings.push(userId);
+        localStorage.setItem("current_user", JSON.stringify(currentUser));
+        window.location.reload();
+      }
+    } catch (error: any) {
+      console.log(error.message);
+    }
+  };
+
+  if (userId && currentUser?.followings.includes(userId)) {
+    return (
+      <div className="profile-btn">
+        <Button className="profile-btn-edit">Message</Button>
+        <i
+          onClick={onClick}
+          className="bi bi-person-check-fill profile-btn-check"
+        ></i>
+      </div>
+    );
+  } else {
+    return (
+      <Button className="profile-btn-edit" onClick={handleFollow}>
+        Follow
+      </Button>
+    );
+  }
+};
+
 const ProfilePage = () => {
+  const { userId } = useParams();
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
+  const [user, setUser] = useState<UserType | undefined>(undefined);
+  const [posts, setPosts] = useState<PostType[] | undefined>(undefined);
   const [showModalPhoto, setShowModalPhoto] = useState<boolean>(false);
   const [showModalCheck, setShowModalCheck] = useState<boolean>(false);
-  const isCurrentUser = true;
-  const navigator = useNavigate();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        if (userId) {
+          const resUser = await userApi.get(userId);
+          const resPosts = await postApi.getYourTimeline(userId);
+          setUser(resUser.data);
+          setPosts(resPosts.data);
+        }
+      } catch (error: any) {
+        if (error.response.status === 404) {
+          navigate("/");
+        } else if (error.response.status === 401) {
+          navigate("/login");
+        }
+      }
+    }
+    fetchProfile();
+  }, [navigate, userId]);
+
+  const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (!currentUser) return;
+    const file = (e.target.files as FileList)[0];
+    const data = new FormData();
+    const filename = Date.now() + file.name;
+    data.append("name", filename);
+    data.append("file", file);
+
+    const newUpdateUser: UserType = {
+      ...currentUser,
+      profilePicture: filename,
+    };
+
+    try {
+      if (currentUser?._id) {
+        await userApi.update(currentUser?._id, newUpdateUser);
+        await uploadFile(data);
+        localStorage.setItem("current_user", JSON.stringify(newUpdateUser));
+        window.location.reload();
+        toast.success("Update successfully");
+      }
+    } catch (error: any) {
+      if (error.response.status === 401) {
+        navigate("/login");
+        dispatch(authActions.logout());
+      } else if (error.response.status === 403) {
+        toast.warning("Nothing change at all");
+      } else toast.error("Update failure");
+    }
+  };
 
   return (
     <>
@@ -202,48 +313,45 @@ const ProfilePage = () => {
             onClick={() => setShowModalPhoto(true)}
           >
             <img
-              src="https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=465&q=80"
+              src={
+                user?.profilePicture
+                  ? `https://bth-social-server.netlify.app/files/${user?.profilePicture}`
+                  : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
+              }
               alt=""
               className="profile-img"
             />
           </div>
           <div className="profile-info">
             <div className="profile-info_container">
-              <span className="profile-username">bienthanhhung</span>
-              {isCurrentUser ? (
+              <span className="profile-username">{user?.username}</span>
+              {currentUser?._id === user?._id ? (
                 <Button
                   className="profile-btn-edit"
                   onClick={() => {
-                    console.log("ss");
-                    navigator("/accounts/edit");
+                    navigate("/accounts/edit");
                   }}
                 >
                   Edit profile
                 </Button>
               ) : (
-                <div className="profile-btn">
-                  <Button className="profile-btn-edit">Message</Button>
-                  <i
-                    onClick={() => setShowModalCheck(true)}
-                    className="bi bi-person-check-fill profile-btn-check"
-                  ></i>
-                </div>
+                <Following onClick={() => setShowModalCheck(true)}></Following>
               )}
             </div>
             <div className="profile-stats">
               <div className="profile-posts">
-                <b>0</b> posts
+                <b>{posts?.length}</b> posts
               </div>
               <div className="profile-followers">
-                <b>19</b> followers
+                <b>{user?.followers?.length}</b> followers
               </div>
               <div className="profile-followings">
-                <b>20</b> followings
+                <b>{user?.followings?.length}</b> followings
               </div>
             </div>
             <div className="profile-detail">
-              <h5 className="profile-name">Bien Thanh Hung</h5>
-              <div className="profile-desc">bien-thanh-hung.netlify.app</div>
+              <h5 className="profile-name">{user?.fullname}</h5>
+              <div className="profile-desc">{user?.desc}</div>
             </div>
           </div>
         </div>
@@ -251,7 +359,7 @@ const ProfilePage = () => {
           <div className="profile-nav">
             <NavLink
               end
-              to="/:userId"
+              to={`/${user?._id}`}
               className={({ isActive }) =>
                 isActive ? `profile-nav_item active` : `profile-nav_item`
               }
@@ -262,7 +370,7 @@ const ProfilePage = () => {
 
             <NavLink
               end
-              to="/:userId/saved"
+              to={`/${user?._id}/saved`}
               className={({ isActive }) =>
                 isActive ? `profile-nav_item active` : `profile-nav_item`
               }
@@ -273,7 +381,7 @@ const ProfilePage = () => {
 
             <NavLink
               end
-              to="/:userId/reels"
+              to={`/${user?._id}/reels`}
               className={({ isActive }) =>
                 isActive ? `profile-nav_item active` : `profile-nav_item`
               }
@@ -292,8 +400,11 @@ const ProfilePage = () => {
       >
         <StyledChangePhoto>
           <h2>Change Profile Photo</h2>
-          <div>Upload Photo</div>
-          <div>Remove Current Photo</div>
+          <label className="blue" htmlFor="upload-photo">
+            Upload Photo
+          </label>
+          <input type="file" hidden id="upload-photo" onChange={handleUpload} />
+          <div className="red">Remove Current Photo</div>
           <div onClick={() => setShowModalPhoto(false)}>Cancel</div>
         </StyledChangePhoto>
       </Modal>
@@ -305,7 +416,33 @@ const ProfilePage = () => {
       >
         <StyledChangePhoto>
           <h2>Unfollow?</h2>
-          <div>Unfollow</div>
+          <div
+            onClick={async () => {
+              const currentUserLocal: UserType | null = JSON.parse(
+                localStorage.getItem("current_user") || ""
+              );
+              try {
+                if (userId && currentUserLocal) {
+                  await userApi.unFollowUser(userId, currentUserLocal._id);
+
+                  const followingsIndex = currentUserLocal.followings.findIndex(
+                    (id: string) => id === userId
+                  );
+
+                  if (followingsIndex !== -1) {
+                    currentUserLocal.followings.splice(followingsIndex, 1);
+                    localStorage.setItem(
+                      "current_user",
+                      JSON.stringify(currentUserLocal)
+                    );
+                    window.location.reload();
+                  }
+                }
+              } catch (error) {}
+            }}
+          >
+            Unfollow
+          </div>
           <div onClick={() => setShowModalCheck(false)}>Cancel</div>
         </StyledChangePhoto>
       </Modal>

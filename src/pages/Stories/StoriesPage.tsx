@@ -1,8 +1,15 @@
-import { createBrowserHistory } from "history";
-import React from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
-import StorySlide from "../../components/StorySlide/StorySlide";
+import storyApi from "../../api/storyApi";
+import userApi from "../../api/userApi";
+import { useAppDispatch } from "../../app/hooks";
+import { FileNameType } from "../../components/Create/Create";
+import StorySlide, {
+  StoriesType,
+} from "../../components/StorySlide/StorySlide";
+import { authActions } from "../../redux/features/auth/authSlice";
+import { history } from "../../utils/history";
 
 const StyledStoriesPage = styled.div`
   background-color: #1a1a1a;
@@ -32,7 +39,47 @@ const StyledStoriesPage = styled.div`
 `;
 
 const StoriesPage = () => {
-  const history = createBrowserHistory();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { storyId } = useParams();
+  const [stories, setStories] = useState<StoriesType[]>([]);
+  useEffect(() => {
+    async function fetchStories() {
+      try {
+        if (storyId) {
+          const resStory = await storyApi.getStory(storyId);
+          const resUser = await userApi.get(resStory.data.userId);
+          const user = resUser.data;
+          const stories = resStory.data.stories;
+
+          const storyArray = stories.map((story: FileNameType) => {
+            return {
+              url: `https://bth-social-server.netlify.app/files/${story.filename}`,
+              type: story.type,
+              header: {
+                heading: user?.username,
+                subheading: user?.fullname,
+                profileImage: user?.profilePicture
+                  ? `https://bth-social-server.netlify.app/files/${user?.profilePicture}`
+                  : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg",
+              },
+              duration: story.type === "image" ? 10000 : undefined,
+            };
+          });
+
+          setStories(storyArray);
+        }
+      } catch (error: any) {
+        if (error.response.status === 401) {
+          navigate("/login");
+          dispatch(authActions.logout());
+        }
+      }
+    }
+
+    fetchStories();
+  }, [dispatch, navigate, storyId]);
+
   return (
     <StyledStoriesPage>
       <Link to="/" className="story-logo">
@@ -41,7 +88,7 @@ const StoriesPage = () => {
       <div className="story-close" onClick={() => history.back()}>
         <i className="bi bi-x-lg"></i>
       </div>
-      <StorySlide></StorySlide>
+      {stories.length > 0 && <StorySlide stories={stories}></StorySlide>}
     </StyledStoriesPage>
   );
 };

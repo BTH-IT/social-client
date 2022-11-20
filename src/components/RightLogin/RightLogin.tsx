@@ -1,9 +1,17 @@
-import React from "react";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import * as yup from "yup";
+import { useAppDispatch } from "../../app/hooks";
+import { authActions } from "../../redux/features/auth/authSlice";
 import Button from "../Button/Button";
-import Input from "../Input/Input";
-import Label from "../Label/Label";
+import InputForm from "../Input/InputForm";
+
+export interface LoginType {
+  email: string;
+  password: string;
+}
 
 const StyledRightLogin = styled.form`
   padding: 10px 20px;
@@ -41,28 +49,62 @@ const StyledRightLogin = styled.form`
   }
 `;
 
+const loginSchema = yup.object({
+  email: yup
+    .string()
+    .required("This field is a required field")
+    .email("This field must to be an email"),
+  password: yup
+    .string()
+    .required("This field is a required field")
+    .max(20, "This field must less than or equal to 20")
+    .min(4, "This field must better than or equal to 4"),
+});
+
 const RightLogin = () => {
+  const dispatch = useAppDispatch();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid },
+  } = useForm<LoginType>({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    resolver: yupResolver(loginSchema),
+    mode: "onChange",
+  });
+
+  const handleLogin = async (values: LoginType) => {
+    if (!isValid) return;
+
+    dispatch(authActions.login(values));
+  };
+
   return (
-    <StyledRightLogin>
+    <StyledRightLogin onSubmit={handleSubmit(handleLogin)}>
       <h2 className="form-heading">𝘽𝙏𝙃 𝙎𝙤𝙘𝙞𝙖𝙡</h2>
-      <div>
-        <Label htmlFor="email">Email</Label>
-        <Input
-          placeholder="Email"
-          id="email"
-          className="form-input"
-          type="email"
-        ></Input>
-      </div>
-      <div>
-        <Label htmlFor="password">Password</Label>
-        <Input
-          placeholder="Password"
-          id="password"
-          className="form-input"
-          type="password"
-        ></Input>
-      </div>
+      <InputForm
+        control={control}
+        title="Email"
+        name="email"
+        placeholder="Email"
+        id="email"
+        className="form-input"
+        type="text"
+      ></InputForm>
+      <InputForm
+        control={control}
+        hasIcon={true}
+        title="Password"
+        name="password"
+        placeholder="Password"
+        id="password"
+        className="form-input"
+        type="password"
+      ></InputForm>
       <Button primary className="form-btn">
         Log in
       </Button>

@@ -1,7 +1,13 @@
-import React from "react";
+import moment from "moment";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import userApi from "../../api/userApi";
+import { useAppDispatch } from "../../app/hooks";
+import { authActions } from "../../redux/features/auth/authSlice";
 import Avatar from "../Avatar/Avatar";
 import CommentWithReply, { StyledTime } from "../Comment/CommentWithReply";
+import { PostType, UserType } from "./Post";
 import PostComment from "./PostComment";
 import PostHeading from "./PostHeading";
 import PostInfo from "./PostInfo";
@@ -18,6 +24,7 @@ const StyledPostContentDetail = styled.div`
   border: 1px solid rgb(219, 219, 219);
   border-radius: 0 4px 4px 0;
   background-color: white;
+  justify-content: space-around;
 `;
 
 const StyledStatus = styled.div`
@@ -62,15 +69,57 @@ const StyledPostDetail = styled.div`
   }
 `;
 
-const PostDetail = () => {
+export interface CommentType {
+  id: string;
+  username: string;
+  content: string;
+  parentId: string;
+  userId: string;
+  likes: string[];
+  createdAt: string;
+  updateAt: string;
+}
+
+const PostDetail = ({ post }: { post: PostType }) => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const [user, setUser] = useState<UserType | null>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await userApi.get(post.userId);
+        setUser(res.data);
+      } catch (error: any) {
+        if (error.response.status === 401) {
+          navigate("/login");
+          dispatch(authActions.logout());
+        }
+      }
+    }
+    fetchUser();
+  }, [dispatch, navigate, post.userId]);
+
   return (
     <StyledPostDetail>
       <div className="post-detail-image">
-        <PostSlide width="100%" height="100%"></PostSlide>
+        <PostSlide
+          width="100%"
+          height="100%"
+          fileUploads={post.fileUploads}
+        ></PostSlide>
       </div>
       <StyledPostContentDetail>
         <div className="post-detail-content-heading">
-          <PostHeading></PostHeading>
+          <PostHeading
+            post={post}
+            username={user?.username || ""}
+            avatar={
+              user?.profilePicture
+                ? `https://bth-social-server.netlify.app/files/${user?.profilePicture}`
+                : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
+            }
+          ></PostHeading>
         </div>
         <StyledStatus>
           <div className="status-content">
@@ -79,21 +128,30 @@ const PostDetail = () => {
                 style={{
                   width: "44px",
                   height: "44px",
+                  flexShrink: 0,
                 }}
+                url={
+                  user?.profilePicture
+                    ? `https://bth-social-server.netlify.app/files/${user?.profilePicture}`
+                    : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
+                }
               ></Avatar>
               <div>
-                <h6>bienthanhhung</h6> need a wallpaper?
-                <StyledTime>1w</StyledTime>
+                <h6>{user?.username}</h6> {post.desc}
+                <StyledTime>{moment(post.createdAt).fromNow()}</StyledTime>
               </div>
             </div>
           </div>
           <div className="status-comments">
-            <CommentWithReply></CommentWithReply>
-            <CommentWithReply></CommentWithReply>
-            <CommentWithReply></CommentWithReply>
-            <CommentWithReply></CommentWithReply>
-            <CommentWithReply></CommentWithReply>
-            <CommentWithReply></CommentWithReply>
+            {post.comments &&
+              post.comments.length > 0 &&
+              post.comments.map((comment: CommentType) => (
+                <CommentWithReply
+                  postId={post._id}
+                  comment={comment}
+                  key={comment.id}
+                ></CommentWithReply>
+              ))}
           </div>
         </StyledStatus>
         <StyledInteractive>
@@ -102,9 +160,9 @@ const PostDetail = () => {
               marginBottom: "10px",
             }}
           >
-            <PostInfo></PostInfo>
+            <PostInfo post={post}></PostInfo>
           </div>
-          <PostComment></PostComment>
+          <PostComment postId={post._id}></PostComment>
         </StyledInteractive>
       </StyledPostContentDetail>
     </StyledPostDetail>

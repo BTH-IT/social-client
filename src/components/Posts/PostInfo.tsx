@@ -2,6 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import PostModal from "./PostModal";
+import moment from "moment";
+import postApi from "../../api/postApi";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { PostType } from "./Post";
+import { authActions } from "../../redux/features/auth/authSlice";
 
 const StyledPostInteractive = styled.div`
   display: flex;
@@ -58,20 +63,65 @@ const StyledTime = styled.div`
 const PostInfo = ({
   children,
   hasModal,
+  post,
 }: {
   children?: React.ReactNode;
   hasModal?: true | false;
+  post: PostType;
 }) => {
-  const navigator = useNavigate();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [heart, setHeart] = useState<boolean>(false);
   const [save, setSave] = useState<boolean>(false);
   const [show, setShow] = useState<boolean>(false);
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
+
+  useEffect(() => {
+    if (post.likes && post.likes.length > 0) {
+      if (post.likes.find((like) => like === currentUser?._id)) {
+        setHeart(true);
+      }
+    }
+
+    if (post.saved && post.saved.length > 0) {
+      if (post.saved.find((save) => save === currentUser?._id)) {
+        setSave(true);
+      }
+    }
+  }, [currentUser?._id, post.likes, post.saved]);
 
   return (
     <>
       <StyledPostInteractive>
         <StyledReact>
-          <div onClick={() => setHeart(!heart)}>
+          <div
+            onClick={async () => {
+              try {
+                if (currentUser) {
+                  if (post._id) {
+                    await postApi.likePost(post._id, currentUser._id);
+                  }
+
+                  if (heart) {
+                    post.likes?.splice(
+                      post.likes?.findIndex(
+                        (like) => like === currentUser?._id
+                      ),
+                      1
+                    );
+                  } else {
+                    post.likes?.push(currentUser._id);
+                  }
+                  setHeart(!heart);
+                }
+              } catch (error: any) {
+                if (error.response.status === 401) {
+                  navigate("/login");
+                  dispatch(authActions.logout());
+                }
+              }
+            }}
+          >
             {heart ? (
               <i className="bi bi-heart-fill fill"></i>
             ) : (
@@ -87,7 +137,7 @@ const PostInfo = ({
                 display: "inline-block",
               }}
               onClick={() => {
-                navigator("/p/:id");
+                navigate(`/p/${post._id}`);
               }}
             ></i>
           ) : (
@@ -104,7 +154,33 @@ const PostInfo = ({
             ></i>
           )}
         </StyledReact>
-        <div className="post-save" onClick={() => setSave(!save)}>
+        <div
+          className="post-save"
+          onClick={async () => {
+            try {
+              if (currentUser) {
+                if (post._id) {
+                  await postApi.savePost(post._id, currentUser._id);
+                }
+
+                if (save) {
+                  post.saved?.splice(
+                    post.saved?.findIndex((save) => save === currentUser?._id),
+                    1
+                  );
+                } else {
+                  post.saved?.push(currentUser._id);
+                }
+                setSave(!save);
+              }
+            } catch (error: any) {
+              if (error.response.status === 401) {
+                navigate("/login");
+                dispatch(authActions.logout());
+              }
+            }
+          }}
+        >
           {save ? (
             <i className="bi bi-bookmark-fill fill"></i>
           ) : (
@@ -112,11 +188,12 @@ const PostInfo = ({
           )}
         </div>
       </StyledPostInteractive>
-      <StyledLikes>2930 likes</StyledLikes>
+      <StyledLikes>{post.likes?.length} likes</StyledLikes>
       {children}
-      <StyledTime>2 day ago</StyledTime>
+      <StyledTime>{moment(post.createdAt).fromNow()}</StyledTime>
       {hasModal ? (
         <PostModal
+          post={post}
           show={show}
           onClose={() => {
             setShow(false);

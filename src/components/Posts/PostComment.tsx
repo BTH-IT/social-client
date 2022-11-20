@@ -1,7 +1,10 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import styled from "styled-components";
-import Input from "../Input/Input";
-// import "./PostComment.scss";
+import { debounce } from "debounce";
+import postApi from "../../api/postApi";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { authActions } from "../../redux/features/auth/authSlice";
+import { useNavigate } from "react-router-dom";
 
 const StyledPostComment = styled.div`
   border-top: 2px solid rgb(239, 239, 239);
@@ -14,6 +17,17 @@ const StyledPostComment = styled.div`
 
   .post-input {
     flex: 1;
+    width: 100%;
+    height: 100%;
+    outline: none;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.6rem;
+    padding: 12px 16px;
+    color: rgb(38, 38, 38);
+    font-weight: 200;
+    display: block;
+    padding: 10px;
   }
 
   .post-comment-btn {
@@ -29,25 +43,68 @@ const StyledPostComment = styled.div`
   }
 `;
 
-const PostComment = () => {
-  const postBtnRef = useRef<HTMLDivElement | null>(null);
+export interface CommentType {
+  username: string;
+  content: string;
+  parentId?: string;
+  userId: string;
+}
 
-  const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
+const PostComment = ({ postId }: { postId: string }) => {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
+  const postBtnRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [content, setContent] = useState<string>("");
+
+  const handleTyping = debounce((e: React.ChangeEvent<HTMLInputElement>) => {
     if ((e.target as HTMLInputElement).value) {
       (postBtnRef.current as HTMLDivElement).classList.remove("disabled");
     } else {
       (postBtnRef.current as HTMLDivElement).classList.add("disabled");
     }
+
+    setContent((e.target as HTMLInputElement).value);
+  }, 100);
+
+  const handlePostComment = async () => {
+    if (!content) return;
+
+    if (currentUser?.username && currentUser?._id) {
+      const data = {
+        username: currentUser.username,
+        content: content,
+        parentId: undefined,
+        userId: currentUser._id,
+      };
+
+      try {
+        await postApi.commentPost(postId, data);
+        (inputRef.current as HTMLInputElement).value = "";
+        setContent("");
+      } catch (error: any) {
+        if (error.response.status === 401) {
+          navigate("/login");
+          dispatch(authActions.logout());
+        }
+      }
+    }
   };
 
   return (
     <StyledPostComment>
-      <Input
+      <input
         placeholder="Add a comment..."
         className="post-input"
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleTyping(e)}
+        onChange={handleTyping}
+        ref={inputRef}
       />
-      <div className="post-comment-btn disabled" ref={postBtnRef}>
+      <div
+        className="post-comment-btn disabled"
+        ref={postBtnRef}
+        onClick={handlePostComment}
+      >
         Post
       </div>
     </StyledPostComment>

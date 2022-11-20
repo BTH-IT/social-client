@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useLayoutEffect, useRef } from "react";
 import styled from "styled-components";
 interface InputProps {
   hasIcon?: true | false;
@@ -8,6 +8,8 @@ interface InputProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   id?: string;
   type?: string | "text";
+  children?: React.ReactNode;
+  defaultValue?: string;
 }
 
 const StyledInput = styled.div`
@@ -51,7 +53,17 @@ const Input = ({
   onChange,
   id,
   type,
+  children,
+  defaultValue,
 }: InputProps) => {
+  const inputRef = useRef() as React.MutableRefObject<HTMLInputElement>;
+
+  useLayoutEffect(() => {
+    if (!defaultValue) {
+      (inputRef.current as HTMLInputElement).value = "";
+    }
+  });
+
   return (
     <StyledInput className={`${className}`} primary={primary}>
       <input
@@ -62,9 +74,11 @@ const Input = ({
             onChange(e);
           }
         }}
+        defaultValue={defaultValue}
         id={id}
+        ref={inputRef}
       />
-      {hasIcon ? <i className="bi bi-x-circle-fill"></i> : null}
+      {hasIcon ? children : null}
     </StyledInput>
   );
 };

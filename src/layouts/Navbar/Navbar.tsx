@@ -9,6 +9,8 @@ import Notification from "../../components/Notification/Notification";
 import Create from "../../components/Create/Create";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { authActions } from "../../redux/features/auth/authSlice";
 
 const StyledNav = styled.div`
   padding: 8px 12px 20px 12px;
@@ -109,6 +111,8 @@ export const StyledAvatar = styled.img`
 
 const Navbar = () => {
   const navigator = useNavigate();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.currentUser);
   const [search, setSearch] = useState<boolean>(false);
   const [noti, setNoti] = useState<boolean>(false);
   const [create, setCreate] = useState<boolean>(false);
@@ -231,20 +235,29 @@ const Navbar = () => {
 
           <NavLinkItem
             title="Profile"
-            to="/:userId"
+            to={`/${user?._id}`}
             toggle={toggle}
             onClick={() => {
               setNoti(false);
               setSearch(false);
             }}
           >
-            <StyledAvatar src="https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=465&q=80"></StyledAvatar>
+            <StyledAvatar
+              src={
+                user?.profilePicture
+                  ? `https://bth-social-server.netlify.app/files/${user?.profilePicture}`
+                  : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
+              }
+            ></StyledAvatar>
           </NavLinkItem>
         </div>
         <NavItem
           title="Log Out"
           toggle={toggle}
-          onClick={() => navigator("/login")}
+          onClick={() => {
+            dispatch(authActions.logout());
+            navigator("/login");
+          }}
         >
           <i className="bi bi-box-arrow-right"></i>
         </NavItem>

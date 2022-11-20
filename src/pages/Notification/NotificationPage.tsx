@@ -1,5 +1,7 @@
-import React from "react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { useAppSelector } from "../../app/hooks";
 import Button from "../../components/Button/Button";
 
 const StyledNoti = styled.div`
@@ -48,6 +50,20 @@ const StyledNoti = styled.div`
 `;
 
 const NotificationPage = () => {
+  const navigate = useNavigate();
+  const loginSuccess = useAppSelector((state) => state.auth.isLoggedIn);
+
+  useEffect(() => {
+    if (!loginSuccess) {
+      navigate("/login", { replace: true });
+    }
+  }, [loginSuccess]);
+
+  if (!loginSuccess) {
+    navigate("/login");
+    return null;
+  }
+
   return (
     <StyledNoti>
       <h4 className="notification-title">Notifications</h4>

@@ -1,6 +1,14 @@
-import React, { useState } from "react";
+import moment from "moment";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import postApi from "../../api/postApi";
+import userApi from "../../api/userApi";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { authActions } from "../../redux/features/auth/authSlice";
 import Avatar from "../Avatar/Avatar";
+import { UserType } from "../Posts/Post";
+import { CommentType } from "../Posts/PostDetail";
 
 const StyledComment = styled.div`
   font-size: 1.2rem;
@@ -15,10 +23,10 @@ const StyledComment = styled.div`
     font-size: 1.2rem;
   }
 
-  &-react {
+  .comment-react {
     cursor: pointer;
 
-    i.fill {
+    i.bi-heart-fill {
       color: #ed4956;
     }
   }
@@ -52,8 +60,38 @@ export const StyledReply = styled.div`
   cursor: pointer;
 `;
 
-const CommentWithReply = () => {
+const CommentWithReply = ({
+  postId,
+  comment,
+}: {
+  postId: string;
+  comment: CommentType;
+}) => {
   const [heart, setHeart] = useState<boolean>(false);
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [user, setUser] = useState<UserType | null>(null);
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await userApi.get(comment.userId);
+        setUser(res.data);
+      } catch (error: any) {
+        if (error.response.status === 401) {
+          navigate("/login");
+          dispatch(authActions.logout());
+        }
+      }
+    }
+    fetchUser();
+
+    if (comment.likes && comment.likes.length > 0) {
+      if (comment.likes.find((like) => like === currentUser?._id)) {
+        setHeart(true);
+      }
+    }
+  }, [comment.likes, comment.userId, currentUser?._id, dispatch, navigate]);
 
   return (
     <StyledComment>
@@ -64,20 +102,51 @@ const CommentWithReply = () => {
             height: "44px",
             flexShrink: 0,
           }}
+          url={
+            currentUser?.profilePicture
+              ? `https://bth-social-server.netlify.app/files/${currentUser?.profilePicture}`
+              : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
+          }
         ></Avatar>
         <div>
-          <h6>bienthanhhung</h6> need a wallpaper? heheheheheh adsawd a adsawd
-          asdawd asdawd sada
+          <h6>{comment.username}</h6> {comment.content}
           <StyledInteractive>
-            <StyledTime>1w</StyledTime>
-            <StyledLike>2 likes</StyledLike>
-            <StyledReply>Reply</StyledReply>
+            <StyledTime>{moment(comment.createdAt).fromNow()}</StyledTime>
+            <StyledLike>{comment.likes.length} likes</StyledLike>
           </StyledInteractive>
         </div>
       </StyledCommentContent>
-      <div className="comment-react" onClick={() => setHeart(!heart)}>
+      <div
+        className="comment-react"
+        onClick={async () => {
+          try {
+            if (currentUser) {
+              await postApi.likeCommentPost(
+                postId,
+                currentUser._id,
+                comment.id
+              );
+
+              if (heart) {
+                comment.likes?.splice(
+                  comment.likes?.findIndex((like) => like === currentUser?._id),
+                  1
+                );
+              } else {
+                comment.likes?.push(currentUser._id);
+              }
+              setHeart(!heart);
+            }
+          } catch (error: any) {
+            if (error.response.status === 401) {
+              navigate("/login");
+              dispatch(authActions.logout());
+            }
+          }
+        }}
+      >
         {heart ? (
-          <i className="bi bi-heart-fill fill"></i>
+          <i className="bi bi-heart-fill"></i>
         ) : (
           <i className="bi bi-heart"></i>
         )}

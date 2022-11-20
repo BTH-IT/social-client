@@ -2,6 +2,7 @@ import { useState } from "react";
 import styled from "styled-components";
 import Avatar from "../Avatar/Avatar";
 import Modal from "../Modal/Modal";
+import { PostType } from "./Post";
 import PostFeature from "./PostFeature";
 
 const StyledPostHeading = styled.div`
@@ -27,7 +28,15 @@ const StyledPostHeading = styled.div`
   }
 `;
 
-const PostHeading = () => {
+const PostHeading = ({
+  username,
+  avatar,
+  post,
+}: {
+  username: string;
+  avatar: string;
+  post: PostType;
+}) => {
   const [show, setShow] = useState<boolean>(false);
 
   return (
@@ -39,15 +48,16 @@ const PostHeading = () => {
               width: "44px",
               height: "44px",
             }}
+            url={avatar}
           ></Avatar>
-          <h6>bienthanhhung</h6>
+          <h6>{username}</h6>
         </div>
         <div onClick={() => setShow(true)}>
           <i className="bi bi-three-dots"></i>
         </div>
       </StyledPostHeading>
       <Modal visible={show} onClose={() => setShow(false)} overlay={true}>
-        <PostFeature onClose={() => setShow(false)}></PostFeature>
+        <PostFeature post={post} onClose={() => setShow(false)}></PostFeature>
       </Modal>
     </>
   );

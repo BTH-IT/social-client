@@ -1,12 +1,14 @@
-import React from "react";
 import Modal from "../Modal/Modal";
+import { PostType } from "./Post";
 import PostDetail from "./PostDetail";
 
 const PostModal = ({
+  post,
   show,
   onClose,
   className,
 }: {
+  post: PostType;
   show: boolean;
   onClose: () => void;
   className?: string;
@@ -19,7 +21,7 @@ const PostModal = ({
       hasIconClose={true}
       containerClassName={className}
     >
-      <PostDetail></PostDetail>
+      {post && <PostDetail post={post}></PostDetail>}
     </Modal>
   );
 };

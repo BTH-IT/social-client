@@ -3,6 +3,7 @@ import styled from "styled-components";
 interface AvatarProps {
   style?: React.CSSProperties;
   story?: true | false;
+  url?: string;
 }
 
 const StyledAvatar = styled.div`
@@ -44,14 +45,10 @@ const StyledAvatar = styled.div`
   }
 `;
 
-const Avatar = ({ style, story }: AvatarProps) => {
+const Avatar = ({ style, story, url }: AvatarProps) => {
   return (
     <StyledAvatar className="avatar" style={style} story={story}>
-      <img
-        src="https://images.unsplash.com/photo-1667053508464-eb11b394df83?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=465&q=80"
-        alt=""
-        className="avatar-img"
-      />
+      <img src={url} alt="" className="avatar-img" />
     </StyledAvatar>
   );
 };

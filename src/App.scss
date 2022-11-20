@@ -91,6 +91,10 @@
   color: black;
 }
 
+a {
+  outline: none;
+}
+
 @media screen and (max-width: 1024px) {
   .is-mobile {
     display: none;

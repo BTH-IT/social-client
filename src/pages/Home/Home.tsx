@@ -1,9 +1,16 @@
-import React from "react";
+import React, { Suspense, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { useAppSelector } from "../../app/hooks";
 import NavMobileTop from "../../components/Nav/NavMobile/NavMobileTop";
-import Posts from "../../components/Posts/Posts";
-import StoryAvatarSlide from "../../components/StoryAvatarSlide/StoryAvatarSlide";
-import SuggestPosts from "../../components/SuggestPosts/SuggestPosts";
+
+const Posts = React.lazy(() => import("../../components/Posts/Posts"));
+const StoryAvatarSlide = React.lazy(
+  () => import("../../components/StoryAvatarSlide/StoryAvatarSlide")
+);
+const SuggestPosts = React.lazy(
+  () => import("../../components/SuggestPosts/SuggestPosts")
+);
 
 const StyledHome = styled.section`
   width: 100%;
@@ -35,16 +42,34 @@ const StyledHome = styled.section`
 `;
 
 const Home = () => {
+  const navigate = useNavigate();
+  const loginSuccess = useAppSelector((state) => state.auth.isLoggedIn);
+
+  useEffect(() => {
+    if (!loginSuccess) {
+      navigate("/login");
+    }
+  }, [loginSuccess, navigate]);
+
+  if (!loginSuccess) {
+    navigate("/login");
+    return null;
+  }
+
   return (
     <StyledHome>
       <div className="home">
         <NavMobileTop></NavMobileTop>
         <div className="home-slide">
-          <StoryAvatarSlide></StoryAvatarSlide>
+          <Suspense fallback={<p>Loading....</p>}>
+            <StoryAvatarSlide></StoryAvatarSlide>
+          </Suspense>
         </div>
         <div className="home-posts">
-          <Posts></Posts>
-          <SuggestPosts></SuggestPosts>
+          <Suspense fallback={<p>Loading....</p>}>
+            <Posts></Posts>
+            <SuggestPosts></SuggestPosts>
+          </Suspense>
         </div>
       </div>
     </StyledHome>

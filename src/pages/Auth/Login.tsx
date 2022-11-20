@@ -1,5 +1,7 @@
-import React from "react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { useAppSelector } from "../../app/hooks";
 import LeftLogin from "../../components/LeftLogin/LeftLogin";
 import RightLogin from "../../components/RightLogin/RightLogin";
 
@@ -14,6 +16,20 @@ const StyledLogin = styled.div`
 `;
 
 const Login = () => {
+  const navigate = useNavigate();
+  const loginSuccess = useAppSelector((state) => state.auth.isLoggedIn);
+
+  useEffect(() => {
+    if (loginSuccess) {
+      navigate("/");
+    }
+  }, [loginSuccess, navigate]);
+
+  if (loginSuccess) {
+    navigate("/");
+    return null;
+  }
+
   return (
     <StyledLogin>
       <LeftLogin></LeftLogin>

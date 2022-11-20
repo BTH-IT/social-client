@@ -1,8 +1,11 @@
-import React from "react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import Avatar from "../../components/Avatar/Avatar";
-import Button from "../../components/Button/Button";
-import Input from "../../components/Input/Input";
+import chatApi from "../../api/chatApi";
+import { useAppSelector } from "../../app/hooks";
+import ChatBox, { MessageSendType } from "./ChatBox";
+import Conversation, { ChatType } from "./Conversation";
+import { io, Socket } from "socket.io-client";
 
 const StyledMessage = styled.div`
   padding: 20px;
@@ -95,12 +98,10 @@ const StyledMessage = styled.div`
 
     &-inbox {
       padding: 20px;
-      flex: 1;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
       gap: 20px;
-      overflow-y: scroll;
+      overflow: scroll;
 
       &::-webkit-scrollbar {
         display: none;
@@ -153,6 +154,72 @@ const StyledMessage = styled.div`
 `;
 
 const Messenger = () => {
+  const navigate = useNavigate();
+  const loginSuccess = useAppSelector((state) => state.auth.isLoggedIn);
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
+  const [chats, setChats] = useState<ChatType[]>([]);
+  const [currentChat, setCurrentChat] = useState<ChatType | null>(null);
+  const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
+  const [sendMessage, setSendMessage] = useState<any>(null);
+  const [receiveMessage, setReceiveMessage] = useState<any>(null);
+  const socket = useRef<Socket>();
+
+  useEffect(() => {
+    if (socket && currentUser) {
+      socket.current = io("https://bth-social-socket.netlify.app");
+      socket.current.emit("new-user-add", currentUser._id);
+      socket.current.on("get-users", (users) => {
+        setOnlineUsers(users);
+      });
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (sendMessage !== null && socket.current) {
+      socket.current.emit("send-message", sendMessage);
+    }
+  }, [sendMessage]);
+
+  useEffect(() => {
+    if (socket.current) {
+      socket.current.on("receive-message", (data) => {
+        setReceiveMessage(data);
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!loginSuccess) {
+      navigate("/login", { replace: true });
+    }
+  }, [loginSuccess, navigate]);
+
+  useEffect(() => {
+    async function fetchChats() {
+      try {
+        if (currentUser?._id) {
+          const { data } = await chatApi.userChats(currentUser._id);
+          setChats(data);
+        }
+      } catch (error) {}
+    }
+
+    fetchChats();
+  }, [currentUser?._id]);
+
+  if (!loginSuccess) {
+    navigate("/login");
+    return null;
+  }
+
+  const checkOnline = (chat: ChatType) => {
+    const chatMember = chat.members.find(
+      (member) => member !== currentUser?._id
+    );
+    const online = onlineUsers.find((user) => user.userId === chatMember);
+    return online ? true : false;
+  };
+
   return (
     <StyledMessage>
       <div className="messenger-left">
@@ -160,205 +227,24 @@ const Messenger = () => {
           <h3>Chats</h3>
         </div>
         <div className="messenger-left-contact">
-          <div className="messenger-left-contact_container">
-            <Avatar
-              style={{
-                width: "56px",
-                height: "56px",
-              }}
-            ></Avatar>
-            <div className="messenger-left-contact_info">
-              <div className="messenger-left-contact_name">Thanh Hung</div>
-              <div className="messenger-left-contact_status">Offline</div>
-            </div>
-          </div>
-          <div className="messenger-left-contact_container">
-            <Avatar
-              style={{
-                width: "56px",
-                height: "56px",
-              }}
-            ></Avatar>
-            <div className="messenger-left-contact_info">
-              <div className="messenger-left-contact_name">Thanh Hung</div>
-              <div className="messenger-left-contact_status">Offline</div>
-            </div>
-          </div>
-          <div className="messenger-left-contact_container">
-            <Avatar
-              style={{
-                width: "56px",
-                height: "56px",
-              }}
-            ></Avatar>
-            <div className="messenger-left-contact_info">
-              <div className="messenger-left-contact_name">Thanh Hung</div>
-              <div className="messenger-left-contact_status">Offline</div>
-            </div>
-          </div>
-          <div className="messenger-left-contact_container">
-            <Avatar
-              style={{
-                width: "56px",
-                height: "56px",
-              }}
-            ></Avatar>
-            <div className="messenger-left-contact_info">
-              <div className="messenger-left-contact_name">Thanh Hung</div>
-              <div className="messenger-left-contact_status">Offline</div>
-            </div>
-          </div>
-          <div className="messenger-left-contact_container">
-            <Avatar
-              style={{
-                width: "56px",
-                height: "56px",
-              }}
-            ></Avatar>
-            <div className="messenger-left-contact_info">
-              <div className="messenger-left-contact_name">Thanh Hung</div>
-              <div className="messenger-left-contact_status">Offline</div>
-            </div>
-          </div>
-          <div className="messenger-left-contact_container">
-            <Avatar
-              style={{
-                width: "56px",
-                height: "56px",
-              }}
-            ></Avatar>
-            <div className="messenger-left-contact_info">
-              <div className="messenger-left-contact_name">Thanh Hung</div>
-              <div className="messenger-left-contact_status">Offline</div>
-            </div>
-          </div>
-          <div className="messenger-left-contact_container">
-            <Avatar
-              style={{
-                width: "56px",
-                height: "56px",
-              }}
-            ></Avatar>
-            <div className="messenger-left-contact_info">
-              <div className="messenger-left-contact_name">Thanh Hung</div>
-              <div className="messenger-left-contact_status">Offline</div>
-            </div>
-          </div>
-          <div className="messenger-left-contact_container">
-            <Avatar
-              style={{
-                width: "56px",
-                height: "56px",
-              }}
-            ></Avatar>
-            <div className="messenger-left-contact_info">
-              <div className="messenger-left-contact_name">Thanh Hung</div>
-              <div className="messenger-left-contact_status">Offline</div>
-            </div>
-          </div>
-          <div className="messenger-left-contact_container">
-            <Avatar
-              style={{
-                width: "56px",
-                height: "56px",
-              }}
-            ></Avatar>
-            <div className="messenger-left-contact_info">
-              <div className="messenger-left-contact_name">Thanh Hung</div>
-              <div className="messenger-left-contact_status">Offline</div>
-            </div>
-          </div>
-          <div className="messenger-left-contact_container">
-            <Avatar
-              style={{
-                width: "56px",
-                height: "56px",
-              }}
-            ></Avatar>
-            <div className="messenger-left-contact_info">
-              <div className="messenger-left-contact_name">Thanh Hung</div>
-              <div className="messenger-left-contact_status">Offline</div>
-            </div>
-          </div>
-          <div className="messenger-left-contact_container">
-            <Avatar
-              style={{
-                width: "56px",
-                height: "56px",
-              }}
-            ></Avatar>
-            <div className="messenger-left-contact_info">
-              <div className="messenger-left-contact_name">Thanh Hung</div>
-              <div className="messenger-left-contact_status">Offline</div>
-            </div>
-          </div>
-          <div className="messenger-left-contact_container">
-            <Avatar
-              style={{
-                width: "56px",
-                height: "56px",
-              }}
-            ></Avatar>
-            <div className="messenger-left-contact_info">
-              <div className="messenger-left-contact_name">Thanh Hung</div>
-              <div className="messenger-left-contact_status">Offline</div>
-            </div>
-          </div>
-          <div className="messenger-left-contact_container">
-            <Avatar
-              style={{
-                width: "56px",
-                height: "56px",
-              }}
-            ></Avatar>
-            <div className="messenger-left-contact_info">
-              <div className="messenger-left-contact_name">Thanh Hung</div>
-              <div className="messenger-left-contact_status">Offline</div>
-            </div>
-          </div>
-          <div className="messenger-left-contact_container">
-            <Avatar
-              style={{
-                width: "56px",
-                height: "56px",
-              }}
-            ></Avatar>
-            <div className="messenger-left-contact_info">
-              <div className="messenger-left-contact_name">Thanh Hung</div>
-              <div className="messenger-left-contact_status">Offline</div>
-            </div>
-          </div>
+          {chats.map((chat) => (
+            <Conversation
+              onClick={() => setCurrentChat(chat)}
+              data={chat}
+              currentUserId={currentUser?._id}
+              online={checkOnline(chat)}
+              key={chat._id}
+            ></Conversation>
+          ))}
         </div>
       </div>
       <div className="messenger-right">
-        <div className="messenger-right-heading">
-          <div className="messenger-right-heading_info">
-            <Avatar
-              style={{
-                width: "44px",
-                height: "44px",
-              }}
-            ></Avatar>
-            <div className="messenger-right-heading_name">Thanh Hung</div>
-          </div>
-        </div>
-        <div className="messenger-right-inbox">
-          <div className="messenger-right-inbox_receive">
-            <div> 1 2 3 4 5 6 7 8 9 123 123 132 1 3131313 13 12</div>
-            <div>1 minute ago</div>
-          </div>
-          <div className="messenger-right-inbox_send">
-            <div>12312321</div>
-            <div>1 minute ago</div>
-          </div>
-        </div>
-        <div className="messenger-right-field">
-          <Input
-            placeholder="Typing message..."
-            className="messenger-right-input"
-          ></Input>
-          <Button primary>Send</Button>
-        </div>
+        <ChatBox
+          chat={currentChat}
+          currentUserId={currentUser?._id}
+          setSendMessage={(data: any) => setSendMessage(data)}
+          receiveMessage={receiveMessage}
+        ></ChatBox>
       </div>
     </StyledMessage>
   );
