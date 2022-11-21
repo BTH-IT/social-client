@@ -19,7 +19,7 @@ const Home = React.lazy(() => import("./pages/Home/Home"));
 const PostDetailPage = React.lazy(
   () => import("./pages/PostDetail/PostDetailPage")
 );
-// const Messenger = React.lazy(() => import("./pages/Messenger/Messenger"));
+const Messenger = React.lazy(() => import("./pages/Messenger/Messenger"));
 const PostGrid = React.lazy(() => import("./components/PostGrid/PostGrid"));
 
 function App() {
@@ -62,8 +62,7 @@ function App() {
             path="/inbox"
             element={
               <Suspense fallback={<p>Loading...</p>}>
-                {/* <Messenger /> */}
-                Not available
+                <Messenger />
               </Suspense>
             }
           ></Route>
