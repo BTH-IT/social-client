@@ -57,7 +57,7 @@ const Conversation = ({
         }}
         url={
           otherUser?.profilePicture
-            ? `https://bth-social-server.netlify.app/files/${otherUser?.profilePicture}`
+            ? `https://bth-social-server.herokuapp.com/files/${otherUser?.profilePicture}`
             : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
         }
       ></Avatar>

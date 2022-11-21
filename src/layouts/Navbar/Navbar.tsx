@@ -245,7 +245,7 @@ const Navbar = () => {
             <StyledAvatar
               src={
                 user?.profilePicture
-                  ? `https://bth-social-server.netlify.app/files/${user?.profilePicture}`
+                  ? `https://bth-social-server.herokuapp.com/files/${user?.profilePicture}`
                   : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
               }
             ></StyledAvatar>

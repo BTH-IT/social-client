@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: "https://bth-social-server.netlify.app/",
+  baseURL: "https://bth-social-server.herokuapp.com/",
   headers: {
     'Content-Type': 'application/json',
   }

@@ -85,12 +85,12 @@ const PostGrid = () => {
           >
             {post.fileUploads[0].type === "image" ? (
               <img
-                src={`https://bth-social-server.netlify.app/files/${post.fileUploads[0].filename}`}
+                src={`https://bth-social-server.herokuapp.com/files/${post.fileUploads[0].filename}`}
                 alt=""
               />
             ) : (
               <video
-                src={`https://bth-social-server.netlify.app/files/${post.fileUploads[0].filename}`}
+                src={`https://bth-social-server.herokuapp.com/files/${post.fileUploads[0].filename}`}
                 controls
               ></video>
             )}

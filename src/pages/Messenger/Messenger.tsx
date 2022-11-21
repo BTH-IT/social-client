@@ -166,7 +166,7 @@ const Messenger = () => {
 
   useEffect(() => {
     if (socket && currentUser) {
-      socket.current = io("https://bth-social-socket.netlify.app");
+      socket.current = io("https://bth-social-socket.herokuapp.com/");
       socket.current.emit("new-user-add", currentUser._id);
       socket.current.on("get-users", (users) => {
         setOnlineUsers(users);

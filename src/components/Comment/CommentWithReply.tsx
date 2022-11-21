@@ -104,7 +104,7 @@ const CommentWithReply = ({
           }}
           url={
             currentUser?.profilePicture
-              ? `https://bth-social-server.netlify.app/files/${currentUser?.profilePicture}`
+              ? `https://bth-social-server.herokuapp.com/files/${currentUser?.profilePicture}`
               : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
           }
         ></Avatar>
