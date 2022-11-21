@@ -62,7 +62,8 @@ function App() {
             path="/inbox"
             element={
               <Suspense fallback={<p>Loading...</p>}>
-                <Messenger />
+                {/* <Messenger /> */}
+                Not available
               </Suspense>
             }
           ></Route>
