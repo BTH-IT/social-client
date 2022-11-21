@@ -1,7 +1,8 @@
+import { SERVER } from './../utils/constant';
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: "https://bth-social-server.herokuapp.com/",
+  baseURL: `${SERVER}`,
   headers: {
     'Content-Type': 'application/json',
   }

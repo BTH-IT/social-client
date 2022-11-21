@@ -11,6 +11,7 @@ import Input from "../../components/Input/Input";
 import Modal from "../../components/Modal/Modal";
 import { UserType } from "../../components/Posts/Post";
 import { authActions } from "../../redux/features/auth/authSlice";
+import { SERVER } from "../../utils/constant";
 import { StyledChangePhoto } from "../Profile/ProfilePage";
 
 const StyledEditAccount = styled.div`
@@ -216,7 +217,7 @@ const EditAccount = () => {
               <img
                 src={
                   currentUser?.profilePicture
-                    ? `https://bth-social-server.herokuapp.com/files/${currentUser?.profilePicture}`
+                    ? `${SERVER}files/${currentUser?.profilePicture}`
                     : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
                 }
                 alt=""

@@ -16,6 +16,7 @@ import storyApi from "../../api/storyApi";
 import { FileNameType } from "../Create/Create";
 import userApi from "../../api/userApi";
 import { UserType } from "../Posts/Post";
+import { SERVER } from "../../utils/constant";
 
 const StyledCreateStory = styled.label`
   display: block;
@@ -78,7 +79,7 @@ const StoryAvatarInfo = ({ story }: { story: StoryType }) => {
         story
         url={
           user?.profilePicture
-            ? `https://bth-social-server.herokuapp.com/files/${user?.profilePicture}`
+            ? `${SERVER}files/${user?.profilePicture}`
             : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
         }
       ></Avatar>

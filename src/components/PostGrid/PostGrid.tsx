@@ -4,6 +4,7 @@ import styled from "styled-components";
 import postApi from "../../api/postApi";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { authActions } from "../../redux/features/auth/authSlice";
+import { SERVER } from "../../utils/constant";
 import { PostType } from "../Posts/Post";
 
 const StyledPostGrid = styled.div`
@@ -85,12 +86,12 @@ const PostGrid = () => {
           >
             {post.fileUploads[0].type === "image" ? (
               <img
-                src={`https://bth-social-server.herokuapp.com/files/${post.fileUploads[0].filename}`}
+                src={`${SERVER}files/${post.fileUploads[0].filename}`}
                 alt=""
               />
             ) : (
               <video
-                src={`https://bth-social-server.herokuapp.com/files/${post.fileUploads[0].filename}`}
+                src={`${SERVER}files/${post.fileUploads[0].filename}`}
                 controls
               ></video>
             )}

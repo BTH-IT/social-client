@@ -12,6 +12,7 @@ import { UserType } from "../../components/Posts/Post";
 import { authActions } from "../../redux/features/auth/authSlice";
 import { ChatType } from "./Conversation";
 import { v4 as uuidv4 } from "uuid";
+import { SERVER } from "../../utils/constant";
 
 interface MessageType {
   _id: string;
@@ -125,7 +126,7 @@ const ChatBox = ({
                 }}
                 url={
                   otherUser?.profilePicture
-                    ? `https://bth-social-server.herokuapp.com/files/${otherUser?.profilePicture}`
+                    ? `${SERVER}files/${otherUser?.profilePicture}`
                     : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
                 }
               ></Avatar>

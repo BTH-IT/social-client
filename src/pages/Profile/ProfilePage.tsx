@@ -10,6 +10,7 @@ import Button from "../../components/Button/Button";
 import Modal from "../../components/Modal/Modal";
 import { PostType, UserType } from "../../components/Posts/Post";
 import { authActions } from "../../redux/features/auth/authSlice";
+import { SERVER } from "../../utils/constant";
 
 const StyledProfilePage = styled.div`
   max-width: 935px;
@@ -315,7 +316,7 @@ const ProfilePage = () => {
             <img
               src={
                 user?.profilePicture
-                  ? `https://bth-social-server.herokuapp.com/files/${user?.profilePicture}`
+                  ? `${SERVER}files/${user?.profilePicture}`
                   : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
               }
               alt=""

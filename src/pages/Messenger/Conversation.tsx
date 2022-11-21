@@ -5,6 +5,7 @@ import { useAppDispatch } from "../../app/hooks";
 import Avatar from "../../components/Avatar/Avatar";
 import { UserType } from "../../components/Posts/Post";
 import { authActions } from "../../redux/features/auth/authSlice";
+import { SERVER } from "../../utils/constant";
 
 export interface ChatType {
   _id: string;
@@ -57,7 +58,7 @@ const Conversation = ({
         }}
         url={
           otherUser?.profilePicture
-            ? `https://bth-social-server.herokuapp.com/files/${otherUser?.profilePicture}`
+            ? `${SERVER}files/${otherUser?.profilePicture}`
             : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
         }
       ></Avatar>

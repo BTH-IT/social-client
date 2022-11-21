@@ -6,6 +6,7 @@ import postApi from "../../api/postApi";
 import userApi from "../../api/userApi";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { authActions } from "../../redux/features/auth/authSlice";
+import { SERVER } from "../../utils/constant";
 import Avatar from "../Avatar/Avatar";
 import { UserType } from "../Posts/Post";
 import { CommentType } from "../Posts/PostDetail";
@@ -104,7 +105,7 @@ const CommentWithReply = ({
           }}
           url={
             currentUser?.profilePicture
-              ? `https://bth-social-server.herokuapp.com/files/${currentUser?.profilePicture}`
+              ? `${SERVER}files/${currentUser?.profilePicture}`
               : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
           }
         ></Avatar>

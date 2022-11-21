@@ -5,6 +5,7 @@ import styled from "styled-components";
 import userApi from "../../api/userApi";
 import { useAppDispatch } from "../../app/hooks";
 import { authActions } from "../../redux/features/auth/authSlice";
+import { SERVER } from "../../utils/constant";
 import Avatar from "../Avatar/Avatar";
 import Input from "../Input/Input";
 import { UserType } from "../Posts/Post";
@@ -85,7 +86,7 @@ const AvatarInfo = ({ user }: { user: UserType }) => {
         <Avatar
           url={
             user?.profilePicture
-              ? `https://bth-social-server.herokuapp.com/files/${user?.profilePicture}`
+              ? `${SERVER}files/${user?.profilePicture}`
               : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
           }
         ></Avatar>

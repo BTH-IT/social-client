@@ -4,6 +4,7 @@ import "swiper/scss";
 import "swiper/scss/navigation";
 import "swiper/scss/pagination";
 import { FileNameType } from "../Create/Create";
+import { SERVER } from "../../utils/constant";
 
 interface PostSlideProps {
   width: string;
@@ -38,13 +39,13 @@ const PostSlide = ({ width, height, fileUploads }: PostSlideProps) => {
             <div className="post-image">
               {file.type === "image" ? (
                 <img
-                  src={`https://bth-social-server.herokuapp.com/files/${file.filename}`}
+                  src={`${SERVER}files/${file.filename}`}
                   alt=""
                   className="post-img"
                 />
               ) : (
                 <video
-                  src={`https://bth-social-server.herokuapp.com/files/${file.filename}`}
+                  src={`${SERVER}files/${file.filename}`}
                   className="post-img"
                   controls
                 ></video>

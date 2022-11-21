@@ -10,6 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { authActions } from "../../redux/features/auth/authSlice";
 import { useAppDispatch } from "../../app/hooks";
 import { FileNameType } from "../Create/Create";
+import { SERVER } from "../../utils/constant";
 
 export interface PostType {
   _id: string;
@@ -107,7 +108,7 @@ const Post = ({ post }: { post: PostType }) => {
           username={user?.username || ""}
           avatar={
             user?.profilePicture
-              ? `https://bth-social-server.herokuapp.com/files/${user?.profilePicture}`
+              ? `${SERVER}files/${user?.profilePicture}`
               : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg"
           }
         ></PostHeading>

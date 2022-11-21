@@ -9,6 +9,7 @@ import StorySlide, {
   StoriesType,
 } from "../../components/StorySlide/StorySlide";
 import { authActions } from "../../redux/features/auth/authSlice";
+import { SERVER } from "../../utils/constant";
 import { history } from "../../utils/history";
 
 const StyledStoriesPage = styled.div`
@@ -54,13 +55,13 @@ const StoriesPage = () => {
 
           const storyArray = stories.map((story: FileNameType) => {
             return {
-              url: `https://bth-social-server.herokuapp.com/files/${story.filename}`,
+              url: `${SERVER}files/${story.filename}`,
               type: story.type,
               header: {
                 heading: user?.username,
                 subheading: user?.fullname,
                 profileImage: user?.profilePicture
-                  ? `https://bth-social-server.herokuapp.com/files/${user?.profilePicture}`
+                  ? `${SERVER}files/${user?.profilePicture}`
                   : "https://img.myloview.com/stickers/default-avatar-profile-image-vector-social-media-user-icon-400-228654854.jpg",
               },
               duration: story.type === "image" ? 10000 : undefined,
