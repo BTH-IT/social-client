@@ -2,6 +2,7 @@ import { ChangeEvent, useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import styled from "styled-components";
+import chatApi from "../../api/chatApi";
 import postApi from "../../api/postApi";
 import uploadFile from "../../api/uploadFile";
 import userApi from "../../api/userApi";
@@ -11,6 +12,7 @@ import Modal from "../../components/Modal/Modal";
 import { PostType, UserType } from "../../components/Posts/Post";
 import { authActions } from "../../redux/features/auth/authSlice";
 import { SERVER } from "../../utils/constant";
+import { ChatType } from "../Messenger/Conversation";
 
 const StyledProfilePage = styled.div`
   max-width: 935px;
@@ -207,6 +209,7 @@ export const StyledChangePhoto = styled.div`
 
 const Following = ({ onClick }: { onClick: () => void }) => {
   const { userId } = useParams();
+  const navigate = useNavigate();
   const currentUser: UserType | null = JSON.parse(
     localStorage.getItem("current_user") || ""
   );
@@ -225,10 +228,30 @@ const Following = ({ onClick }: { onClick: () => void }) => {
     }
   };
 
+  const handleMessage = async () => {
+    try {
+      if (currentUser && userId) {
+        const { data } = await chatApi.userChats(currentUser._id);
+        const hasChat = data.find((chat: ChatType) =>
+          chat.members.includes(currentUser._id)
+        );
+
+        if (!hasChat) {
+          await chatApi.createChat(currentUser._id, userId);
+        }
+        navigate("/inbox");
+      }
+    } catch (error) {
+      console.log("error");
+    }
+  };
+
   if (userId && currentUser?.followings.includes(userId)) {
     return (
       <div className="profile-btn">
-        <Button className="profile-btn-edit">Message</Button>
+        <Button className="profile-btn-edit" onClick={handleMessage}>
+          Message
+        </Button>
         <i
           onClick={onClick}
           className="bi bi-person-check-fill profile-btn-check"

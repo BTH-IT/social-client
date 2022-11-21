@@ -24,6 +24,13 @@ const chatApi = {
         Authorization: `Bearer ${localStorage.getItem("access_token")}`
       },
     })
+  },
+  createChat(currentUserId: string, userId: string) {
+    return axiosClient.post("/chat/", { senderId: currentUserId, receiverId: userId }, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`
+      },
+    })
   }
 }
 
